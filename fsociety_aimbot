@@ -1,0 +1,354 @@
+local clearTargets = {game:GetService("CoreGui"), game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")}
+
+for _, parent in ipairs(clearTargets) do
+    if parent then
+        for _, child in ipairs(parent:GetChildren()) do
+            if child.Name:match("silentaim") or child.Name:match("gaming_chair") or 
+               (child:IsA("ScreenGui") and child:FindFirstChild("MainFrame")) then
+                child:Destroy()
+            end
+        end
+    end
+end
+
+if getgenv().GamingChairSilentAimCleanup then
+    pcall(getgenv().GamingChairSilentAimCleanup)
+end
+
+local Config = {
+    Enabled = false,
+    Keybind = Enum.KeyCode.V,
+    FieldOfView = 150,
+    Smoothness = 0.05,
+    TargetPart = "Head",
+    TeamCheck = true,
+    WallCheck = true,
+    DeathCheck = true,
+    FriendCheck = true
+}
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local connections = {}
+local LockedTarget = nil
+
+getgenv().GamingChairSilentAimCleanup = function()
+    Config.Enabled = false
+    for _, conn in ipairs(connections) do
+        if conn and conn.Connected then conn:Disconnect() end
+    end
+    if getgenv().ChairFOVCircle then
+        getgenv().ChairFOVCircle:Remove()
+        getgenv().ChairFOVCircle = nil
+    end
+    local ui = ((gethui and gethui()) or game:GetService("CoreGui")):FindFirstChild("gaming_chair_silentaim_ui")
+    if ui then ui:Destroy() end
+    getgenv().GamingChairSilentAimCleanup = nil
+end
+
+if getgenv().ChairFOVCircle then getgenv().ChairFOVCircle:Remove() end
+
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)   -- White
+FOVCircle.Thickness = 1.5
+FOVCircle.Filled = false
+FOVCircle.Transparency = 1
+FOVCircle.Visible = true
+FOVCircle.Radius = Config.FieldOfView
+getgenv().ChairFOVCircle = FOVCircle
+
+table.insert(connections, RunService.RenderStepped:Connect(function()
+    if getgenv().ChairFOVCircle then
+        FOVCircle.Position = UserInputService:GetMouseLocation()
+        FOVCircle.Radius = Config.FieldOfView
+    end
+end))
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "gaming_chair_silentaim_ui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = gethui and gethui() or game:GetService("CoreGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 330, 0, 460)
+MainFrame.Position = UDim2.new(0.5, -165, 0.5, -230)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
+local stroke = Instance.new("UIStroke", MainFrame)
+stroke.Color = Color3.fromRGB(255, 255, 255)   -- White theme
+stroke.Thickness = 1.5
+
+local BackgroundImage = Instance.new("ImageLabel")
+BackgroundImage.Name = "BackgroundImage"
+BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+BackgroundImage.BackgroundTransparency = 1
+BackgroundImage.ScaleType = Enum.ScaleType.Crop
+BackgroundImage.ImageTransparency = 0.45
+BackgroundImage.ZIndex = 1
+BackgroundImage.Parent = MainFrame
+
+task.spawn(function()
+    pcall(function()
+        local assetId = 92338628121260
+        BackgroundImage.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=" .. assetId .. "&width=420&height=420&format=png"
+    end)
+end)
+
+Instance.new("UICorner", BackgroundImage).CornerRadius = UDim.new(0, 6)
+
+local Header = Instance.new("TextLabel")
+Header.Size = UDim2.new(1, 0, 0, 50)
+Header.BackgroundTransparency = 1
+Header.Text = "fsociety gaming chair upgrade"
+Header.TextColor3 = Color3.fromRGB(255, 255, 255)
+Header.Font = Enum.Font.Code
+Header.TextSize = 23
+Header.TextStrokeTransparency = 0.7
+Header.ZIndex = 2
+Header.Parent = MainFrame
+
+Instance.new("Frame", MainFrame).Size = UDim2.new(1, -20, 0, 1)
+Instance.new("Frame", MainFrame).Position = UDim2.new(0, 10, 0, 50)
+Instance.new("Frame", MainFrame).BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1, -20, 1, -65)
+Content.Position = UDim2.new(0, 10, 0, 60)
+Content.BackgroundTransparency = 1
+Content.ZIndex = 3
+Content.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout", Content)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+
+local function createToggle(name, configKey)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 35)
+    frame.BackgroundTransparency = 1
+    frame.Parent = Content
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.7, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = " " .. name
+    label.TextColor3 = Color3.fromRGB(240, 240, 240)
+    label.Font = Enum.Font.SourceSansBold
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 55, 0, 24)
+    button.Position = UDim2.new(1, -55, 0.5, -12)
+    button.BackgroundColor3 = Config[configKey] and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 35)
+    button.Text = Config[configKey] and "ON" or "OFF"
+    button.TextColor3 = Color3.fromRGB(0, 0, 0)
+    button.Font = Enum.Font.Code
+    button.TextSize = 12
+    button.Parent = frame
+
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 4)
+
+    button.MouseButton1Click:Connect(function()
+        Config[configKey] = not Config[configKey]
+        button.Text = Config[configKey] and "ON" or "OFF"
+        TweenService:Create(button, TweenInfo.new(0.15), {
+            BackgroundColor3 = Config[configKey] and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 35)
+        }):Play()
+    end)
+end
+
+local function createSlider(name, min, max, configKey, decimals)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 50)
+    frame.BackgroundTransparency = 1
+    frame.Parent = Content
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = " " .. name .. ": " .. string.format(decimals and "%.2f" or "%d", Config[configKey])
+    label.TextColor3 = Color3.fromRGB(240, 240, 240)
+    label.Font = Enum.Font.SourceSansBold
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, -10, 0, 6)
+    bg.Position = UDim2.new(0, 5, 0, 28)
+    bg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    bg.Parent = frame
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((Config[configKey] - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)   -- White
+    fill.Parent = bg
+
+    local knob = Instance.new("ImageButton")
+    knob.Size = UDim2.new(0, 12, 0, 12)
+    knob.Position = UDim2.new((Config[configKey] - min) / (max - min), -6, 0.5, -6)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.Parent = bg
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+
+    local dragging = false
+
+    local function update(input)
+        local pos = input.Position.X - bg.AbsolutePosition.X
+        local percent = math.clamp(pos / bg.AbsoluteSize.X, 0, 1)
+        local value = min + percent * (max - min)
+        if not decimals then value = math.round(value) end
+
+        fill.Size = UDim2.new(percent, 0, 1, 0)
+        knob.Position = UDim2.new(percent, -6, 0.5, -6)
+        Config[configKey] = value
+        label.Text = " " .. name .. ": " .. string.format(decimals and "%.2f" or "%d", value)
+    end
+
+    knob.InputBegan:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+    end)
+
+    table.insert(connections, UserInputService.InputEnded:Connect(function(inp)
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end))
+
+    table.insert(connections, UserInputService.InputChanged:Connect(function(inp)
+        if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
+            update(inp)
+        end
+    end))
+end
+
+createSlider("Field of View", 10, 800, "FieldOfView")
+createSlider("Smoothness", 0.05, 1, "Smoothness", true)
+createToggle("Team Check", "TeamCheck")
+createToggle("Wall Check", "WallCheck")
+createToggle("Death Check", "DeathCheck")
+createToggle("Friend Check", "FriendCheck")
+
+table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Config.Keybind then
+        Config.Enabled = not Config.Enabled
+    elseif input.KeyCode == Enum.KeyCode.Insert then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end))
+
+local function isWallBetween(origin, targetPos)
+    if not Config.WallCheck then return false end
+    
+    local direction = (targetPos - origin)
+    local distance = direction.Magnitude
+    if distance < 5 then return false end
+    direction = direction.Unit
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.IgnoreWater = true
+
+    local result = Workspace:Raycast(origin + direction * 3, direction * (distance - 6), raycastParams)
+    
+    return result ~= nil
+end
+
+local function isAlive(player)
+    if not player or not player.Character then return false end
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    return humanoid and humanoid.Health > 0 and player.Character:FindFirstChild(Config.TargetPart)
+end
+
+local function getClosestPlayer()
+    if not Config.Enabled then return nil end
+
+    local mousePos = UserInputService:GetMouseLocation()
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    if LockedTarget and isAlive(LockedTarget) then
+        local targetPart = LockedTarget.Character[Config.TargetPart]
+        if targetPart then
+            if not myRoot or not isWallBetween(myRoot.Position, targetPart.Position) then
+                local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                if onScreen and (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude <= Config.FieldOfView then
+                    return LockedTarget
+                end
+            end
+        end
+    end
+
+    local closest, shortest = nil, math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        if Config.DeathCheck and not isAlive(player) then continue end
+        if Config.TeamCheck and player.Team == LocalPlayer.Team then continue end
+        if Config.FriendCheck and LocalPlayer:IsFriendsWith(player.UserId) then continue end
+
+        local char = player.Character
+        if not char then continue end
+        local targetPart = char:FindFirstChild(Config.TargetPart)
+        if not targetPart then continue end
+
+        if myRoot and isWallBetween(myRoot.Position, targetPart.Position) then
+            continue
+        end
+
+        local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+        if onScreen then
+            local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+            if dist <= Config.FieldOfView and dist < shortest then
+                closest = player
+                shortest = dist
+            end
+        end
+    end
+
+    if closest then
+        LockedTarget = closest
+    end
+
+    return LockedTarget
+end
+
+local aimbotConn = RunService.RenderStepped:Connect(function()
+    if not Config.Enabled then 
+        LockedTarget = nil
+        return 
+    end
+
+    local target = getClosestPlayer()
+    if target and target.Character then
+        local targetPart = target.Character:FindFirstChild(Config.TargetPart)
+        if targetPart then
+            local targetCFrame = CFrame.lookAt(Camera.CFrame.Position, targetPart.Position)
+            local effectiveSmooth = 1 - Config.Smoothness
+            Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, effectiveSmooth)
+        end
+    else
+        LockedTarget = nil
+    end
+end)
+
+table.insert(connections, aimbotConn)
+
+print("fuck da hoes")
