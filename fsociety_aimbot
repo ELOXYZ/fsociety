@@ -18,7 +18,7 @@ end
 local Config = {
     Enabled = false,
     Keybind = Enum.KeyCode.V,
-    FieldOfView = 150,
+    FieldOfView = 350,
     Smoothness = 0.05,
     TargetPart = "Head",
     TeamCheck = true,
@@ -446,4 +446,4 @@ end)
 
 table.insert(connections, aimbotConn)
 
-print("fuck da opps")
+print("fsociety loaded")
