@@ -24,13 +24,15 @@ local Config = {
     TeamCheck = true,
     WallCheck = true,
     DeathCheck = true,
-    FriendCheck = true
+    FriendCheck = true,
+    FlightSpeed = 100,
+    FlightEnabled = false,
+    SpectateEnabled = false
 }
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
@@ -39,9 +41,16 @@ local Camera = workspace.CurrentCamera
 
 local connections = {}
 local LockedTarget = nil
+local SelectedPlayer = nil
+local OriginalCameraSubject = nil
 
 getgenv().GamingChairSilentAimCleanup = function()
     Config.Enabled = false
+    Config.FlightEnabled = false
+    Config.SpectateEnabled = false
+    if OriginalCameraSubject then
+        Camera.CameraSubject = OriginalCameraSubject
+    end
     for _, conn in ipairs(connections) do
         if conn and conn.Connected then conn:Disconnect() end
     end
@@ -57,7 +66,7 @@ end
 if getgenv().ChairFOVCircle then getgenv().ChairFOVCircle:Remove() end
 
 local FOVCircle = Drawing.new("Circle")
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)   -- White
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 FOVCircle.Thickness = 1.5
 FOVCircle.Filled = false
 FOVCircle.Transparency = 1
@@ -80,8 +89,8 @@ ScreenGui.Parent = gethui and gethui() or game:GetService("CoreGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 330, 0, 460)
-MainFrame.Position = UDim2.new(0.5, -165, 0.5, -230)
+MainFrame.Size = UDim2.new(0, 330, 0, 520)
+MainFrame.Position = UDim2.new(0.5, -165, 0.5, -260)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -90,11 +99,10 @@ MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
 local stroke = Instance.new("UIStroke", MainFrame)
-stroke.Color = Color3.fromRGB(255, 255, 255)   -- White theme
+stroke.Color = Color3.fromRGB(255, 255, 255)
 stroke.Thickness = 1.5
 
 local BackgroundImage = Instance.new("ImageLabel")
-BackgroundImage.Name = "BackgroundImage"
 BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
 BackgroundImage.BackgroundTransparency = 1
 BackgroundImage.ScaleType = Enum.ScaleType.Crop
@@ -122,26 +130,84 @@ Header.TextStrokeTransparency = 0.7
 Header.ZIndex = 2
 Header.Parent = MainFrame
 
-Instance.new("Frame", MainFrame).Size = UDim2.new(1, -20, 0, 1)
-Instance.new("Frame", MainFrame).Position = UDim2.new(0, 10, 0, 50)
-Instance.new("Frame", MainFrame).BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+local TabFrame = Instance.new("Frame")
+TabFrame.Size = UDim2.new(1, -20, 0, 40)
+TabFrame.Position = UDim2.new(0, 10, 0, 55)
+TabFrame.BackgroundTransparency = 1
+TabFrame.ZIndex = 2
+TabFrame.Parent = MainFrame
+
+local AimbotTab = Instance.new("TextButton")
+AimbotTab.Size = UDim2.new(0.5, -5, 1, 0)
+AimbotTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+AimbotTab.Text = "Aimbot"
+AimbotTab.TextColor3 = Color3.fromRGB(0, 0, 0)
+AimbotTab.Font = Enum.Font.Code
+AimbotTab.TextSize = 16
+AimbotTab.Parent = TabFrame
+Instance.new("UICorner", AimbotTab).CornerRadius = UDim.new(0, 4)
+
+local PlayerTab = Instance.new("TextButton")
+PlayerTab.Size = UDim2.new(0.5, -5, 1, 0)
+PlayerTab.Position = UDim2.new(0.5, 5, 0, 0)
+PlayerTab.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+PlayerTab.Text = "Player"
+PlayerTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlayerTab.Font = Enum.Font.Code
+PlayerTab.TextSize = 16
+PlayerTab.Parent = TabFrame
+Instance.new("UICorner", PlayerTab).CornerRadius = UDim.new(0, 4)
 
 local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, -20, 1, -65)
-Content.Position = UDim2.new(0, 10, 0, 60)
+Content.Size = UDim2.new(1, -20, 1, -110)
+Content.Position = UDim2.new(0, 10, 0, 105)
 Content.BackgroundTransparency = 1
 Content.ZIndex = 3
 Content.Parent = MainFrame
 
-local UIListLayout = Instance.new("UIListLayout", Content)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 8)
+local AimbotContent = Instance.new("Frame")
+AimbotContent.Size = UDim2.new(1, 0, 1, 0)
+AimbotContent.BackgroundTransparency = 1
+AimbotContent.Visible = true
+AimbotContent.Parent = Content
 
-local function createToggle(name, configKey)
+local PlayerContent = Instance.new("Frame")
+PlayerContent.Size = UDim2.new(1, 0, 1, 0)
+PlayerContent.BackgroundTransparency = 1
+PlayerContent.Visible = false
+PlayerContent.Parent = Content
+
+local AimbotList = Instance.new("UIListLayout", AimbotContent)
+AimbotList.SortOrder = Enum.SortOrder.LayoutOrder
+AimbotList.Padding = UDim.new(0, 8)
+
+local PlayerList = Instance.new("UIListLayout", PlayerContent)
+PlayerList.SortOrder = Enum.SortOrder.LayoutOrder
+PlayerList.Padding = UDim.new(0, 8)
+
+AimbotTab.MouseButton1Click:Connect(function()
+    AimbotContent.Visible = true
+    PlayerContent.Visible = false
+    AimbotTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    AimbotTab.TextColor3 = Color3.fromRGB(0, 0, 0)
+    PlayerTab.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    PlayerTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+end)
+
+PlayerTab.MouseButton1Click:Connect(function()
+    AimbotContent.Visible = false
+    PlayerContent.Visible = true
+    PlayerTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    PlayerTab.TextColor3 = Color3.fromRGB(0, 0, 0)
+    AimbotTab.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    AimbotTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+end)
+
+local function createToggle(parent, name, configKey)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, 0, 0, 35)
     frame.BackgroundTransparency = 1
-    frame.Parent = Content
+    frame.Parent = parent
 
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -158,7 +224,7 @@ local function createToggle(name, configKey)
     button.Position = UDim2.new(1, -55, 0.5, -12)
     button.BackgroundColor3 = Config[configKey] and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 35)
     button.Text = Config[configKey] and "ON" or "OFF"
-    button.TextColor3 = Color3.fromRGB(0, 0, 0)
+    button.TextColor3 = Config[configKey] and Color3.fromRGB(0,0,0) or Color3.fromRGB(255,255,255)
     button.Font = Enum.Font.Code
     button.TextSize = 12
     button.Parent = frame
@@ -168,17 +234,18 @@ local function createToggle(name, configKey)
     button.MouseButton1Click:Connect(function()
         Config[configKey] = not Config[configKey]
         button.Text = Config[configKey] and "ON" or "OFF"
+        button.TextColor3 = Config[configKey] and Color3.fromRGB(0,0,0) or Color3.fromRGB(255,255,255)
         TweenService:Create(button, TweenInfo.new(0.15), {
             BackgroundColor3 = Config[configKey] and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 35)
         }):Play()
     end)
 end
 
-local function createSlider(name, min, max, configKey, decimals)
+local function createSlider(parent, name, min, max, configKey, decimals)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, 0, 0, 50)
     frame.BackgroundTransparency = 1
-    frame.Parent = Content
+    frame.Parent = parent
 
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 0, 20)
@@ -198,7 +265,7 @@ local function createSlider(name, min, max, configKey, decimals)
 
     local fill = Instance.new("Frame")
     fill.Size = UDim2.new((Config[configKey] - min) / (max - min), 0, 1, 0)
-    fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)   -- White
+    fill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     fill.Parent = bg
 
     local knob = Instance.new("ImageButton")
@@ -237,16 +304,102 @@ local function createSlider(name, min, max, configKey, decimals)
     end))
 end
 
-createSlider("Field of View", 10, 800, "FieldOfView")
-createSlider("Smoothness", 0.05, 1, "Smoothness", true)
-createToggle("Team Check", "TeamCheck")
-createToggle("Wall Check", "WallCheck")
-createToggle("Death Check", "DeathCheck")
-createToggle("Friend Check", "FriendCheck")
+createSlider(AimbotContent, "Field of View", 10, 800, "FieldOfView")
+createSlider(AimbotContent, "Smoothness", 0.05, 1, "Smoothness", true)
+createToggle(AimbotContent, "Team Check", "TeamCheck")
+createToggle(AimbotContent, "Wall Check", "WallCheck")
+createToggle(AimbotContent, "Death Check", "DeathCheck")
+createToggle(AimbotContent, "Friend Check", "FriendCheck")
+
+createSlider(PlayerContent, "Flight Speed", 50, 300, "FlightSpeed")
+
+local flightBtn = Instance.new("TextButton")
+flightBtn.Size = UDim2.new(1, 0, 0, 35)
+flightBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+flightBtn.Text = "Flight (CFrame) : OFF"
+flightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+flightBtn.Font = Enum.Font.Code
+flightBtn.TextSize = 14
+flightBtn.Parent = PlayerContent
+Instance.new("UICorner", flightBtn).CornerRadius = UDim.new(0, 4)
+
+flightBtn.MouseButton1Click:Connect(function()
+    Config.FlightEnabled = not Config.FlightEnabled
+    flightBtn.Text = "Flight (CFrame) : " .. (Config.FlightEnabled and "ON" or "OFF")
+    flightBtn.BackgroundColor3 = Config.FlightEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 35)
+    flightBtn.TextColor3 = Config.FlightEnabled and Color3.fromRGB(0,0,0) or Color3.fromRGB(255,255,255)
+end)
+
+local playerDropdown = Instance.new("TextButton")
+playerDropdown.Size = UDim2.new(1, 0, 0, 35)
+playerDropdown.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+playerDropdown.Text = "Select Player..."
+playerDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+playerDropdown.Font = Enum.Font.Code
+playerDropdown.TextSize = 14
+playerDropdown.Parent = PlayerContent
+Instance.new("UICorner", playerDropdown).CornerRadius = UDim.new(0, 4)
+
+local teleportBtn = Instance.new("TextButton")
+teleportBtn.Size = UDim2.new(1, 0, 0, 35)
+teleportBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+teleportBtn.Text = "Teleport to Selected"
+teleportBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+teleportBtn.Font = Enum.Font.Code
+teleportBtn.TextSize = 14
+teleportBtn.Parent = PlayerContent
+Instance.new("UICorner", teleportBtn).CornerRadius = UDim.new(0, 4)
+
+local spectateToggle = Instance.new("TextButton")
+spectateToggle.Size = UDim2.new(1, 0, 0, 35)
+spectateToggle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+spectateToggle.Text = "Spectate : OFF"
+spectateToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+spectateToggle.Font = Enum.Font.Code
+spectateToggle.TextSize = 14
+spectateToggle.Parent = PlayerContent
+Instance.new("UICorner", spectateToggle).CornerRadius = UDim.new(0, 4)
+
+local function updatePlayerList()
+    playerDropdown.MouseButton1Click:Connect(function()
+        local players = Players:GetPlayers()
+        local currentIndex = 1
+        for i, p in ipairs(players) do
+            if p == SelectedPlayer then currentIndex = i break end
+        end
+        currentIndex = (currentIndex % #players) + 1
+        SelectedPlayer = players[currentIndex]
+        playerDropdown.Text = SelectedPlayer and SelectedPlayer.Name or "Select Player..."
+    end)
+end
+updatePlayerList()
+
+teleportBtn.MouseButton1Click:Connect(function()
+    if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = SelectedPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
+        end
+    end
+end)
+
+spectateToggle.MouseButton1Click:Connect(function()
+    Config.SpectateEnabled = not Config.SpectateEnabled
+    spectateToggle.Text = "Spectate : " .. (Config.SpectateEnabled and "ON" or "OFF")
+    spectateToggle.BackgroundColor3 = Config.SpectateEnabled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(35, 35, 35)
+    spectateToggle.TextColor3 = Config.SpectateEnabled and Color3.fromRGB(0,0,0) or Color3.fromRGB(255,255,255)
+
+    if Config.SpectateEnabled and SelectedPlayer and SelectedPlayer.Character then
+        OriginalCameraSubject = Camera.CameraSubject
+        Camera.CameraSubject = SelectedPlayer.Character.Humanoid
+    else
+        if OriginalCameraSubject then
+            Camera.CameraSubject = OriginalCameraSubject
+        end
+    end
+end)
 
 table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    
     if input.KeyCode == Config.Keybind then
         Config.Enabled = not Config.Enabled
     elseif input.KeyCode == Enum.KeyCode.Insert then
@@ -254,81 +407,23 @@ table.insert(connections, UserInputService.InputBegan:Connect(function(input, ga
     end
 end))
 
-local function isWallBetween(origin, targetPos)
-    if not Config.WallCheck then return false end
-    
-    local direction = (targetPos - origin)
-    local distance = direction.Magnitude
-    if distance < 5 then return false end
-    direction = direction.Unit
+table.insert(connections, RunService.RenderStepped:Connect(function(dt)
+    if Config.FlightEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local root = LocalPlayer.Character.HumanoidRootPart
+        local moveDir = Vector3.new()
+        
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir += Camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir -= Camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir -= Camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir += Camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0,1,0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir -= Vector3.new(0,1,0) end
 
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-    raycastParams.IgnoreWater = true
-
-    local result = Workspace:Raycast(origin + direction * 3, direction * (distance - 6), raycastParams)
-    
-    return result ~= nil
-end
-
-local function isAlive(player)
-    if not player or not player.Character then return false end
-    local humanoid = player.Character:FindFirstChild("Humanoid")
-    return humanoid and humanoid.Health > 0 and player.Character:FindFirstChild(Config.TargetPart)
-end
-
-local function getClosestPlayer()
-    if not Config.Enabled then return nil end
-
-    local mousePos = UserInputService:GetMouseLocation()
-    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-
-    if LockedTarget and isAlive(LockedTarget) then
-        local targetPart = LockedTarget.Character[Config.TargetPart]
-        if targetPart then
-            if not myRoot or not isWallBetween(myRoot.Position, targetPart.Position) then
-                local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-                if onScreen and (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude <= Config.FieldOfView then
-                    return LockedTarget
-                end
-            end
+        if moveDir.Magnitude > 0 then
+            root.CFrame = root.CFrame + (moveDir.Unit * Config.FlightSpeed * dt)
         end
     end
-
-    local closest, shortest = nil, math.huge
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player == LocalPlayer then continue end
-        if Config.DeathCheck and not isAlive(player) then continue end
-        if Config.TeamCheck and player.Team == LocalPlayer.Team then continue end
-        if Config.FriendCheck and LocalPlayer:IsFriendsWith(player.UserId) then continue end
-
-        local char = player.Character
-        if not char then continue end
-        local targetPart = char:FindFirstChild(Config.TargetPart)
-        if not targetPart then continue end
-
-        if myRoot and isWallBetween(myRoot.Position, targetPart.Position) then
-            continue
-        end
-
-        local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
-        if onScreen then
-            local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-            if dist <= Config.FieldOfView and dist < shortest then
-                closest = player
-                shortest = dist
-            end
-        end
-    end
-
-    if closest then
-        LockedTarget = closest
-    end
-
-    return LockedTarget
-end
+end))
 
 local aimbotConn = RunService.RenderStepped:Connect(function()
     if not Config.Enabled then 
@@ -351,4 +446,4 @@ end)
 
 table.insert(connections, aimbotConn)
 
-print("fuck da hoes")
+print("fuck da opps")
