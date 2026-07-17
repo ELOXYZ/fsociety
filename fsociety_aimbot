@@ -665,4 +665,4 @@ end)
 
 table.insert(connections, aimbotConn)
 
-print("fuck da hoes")
+print("fsociety loaded - no drift flight")
