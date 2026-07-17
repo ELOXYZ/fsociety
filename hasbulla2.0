@@ -26,7 +26,7 @@ local Config = {
     Keybind = Enum.KeyCode.V,
     FlightKey = Enum.KeyCode.B,
     FieldOfView = 150,
-    Smoothness = 0.90,
+    Smoothness = 0.05,
     TargetPart = "Head",
     TeamCheck = true,
     WallCheck = true,
@@ -86,8 +86,8 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = gethui and gethui() or game:GetService("CoreGui")
 
 local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 820, 0, 520)
-Main.Position = UDim2.new(0.5, -410, 0.5, -260)
+Main.Size = UDim2.new(0, 680, 0, 430)
+Main.Position = UDim2.new(0.5, -340, 0.5, -215)
 Main.BackgroundTransparency = 1
 Main.Active = true
 Main.Draggable = true
@@ -116,8 +116,8 @@ TopBar.Parent = Main
 Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 4)
 
 local Image = Instance.new("ImageLabel")
-Image.Size = UDim2.new(0, 90, 0, 70)
-Image.Position = UDim2.new(0, 48, 0, -5)
+Image.Size = UDim2.new(0, 92, 0, 71)
+Image.Position = UDim2.new(0, 30, 0, 0)
 Image.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Image.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=6887805380&width=420&height=420&format=png"
 Image.ScaleType = Enum.ScaleType.Crop
@@ -126,28 +126,28 @@ Image.Parent = TopBar
 Instance.new("UICorner", Image).CornerRadius = UDim.new(0, 6)
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -160, 1, 0)
-Title.Position = UDim2.new(0, 155, 0, 0)
+Title.Size = UDim2.new(1, -170, 1, 0)
+Title.Position = UDim2.new(0, 135, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "hasbulla pro aimbot cheats"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 34
+Title.TextSize = 29
 Title.TextXAlignment = Enum.TextXAlignment.Center
 Title.ZIndex = 3
 Title.Parent = TopBar
 
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 160, 1, -80)
-Sidebar.Position = UDim2.new(0, 15, 0, 80)
+Sidebar.Size = UDim2.new(0, 135, 1, -70)
+Sidebar.Position = UDim2.new(0, 12, 0, 70)
 Sidebar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 Sidebar.BackgroundTransparency = 0.4
 Sidebar.ZIndex = 2
 Sidebar.Parent = Main
 
 local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, -190, 1, -90)
-Content.Position = UDim2.new(0, 185, 0, 80)
+Content.Size = UDim2.new(1, -160, 1, -80)
+Content.Position = UDim2.new(0, 155, 0, 70)
 Content.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 Content.BackgroundTransparency = 0.4
 Content.ZIndex = 2
@@ -158,14 +158,14 @@ local Pages = {}
 
 local function CreatePage(name)
 	local page = Instance.new("ScrollingFrame")
-	page.Size = UDim2.new(1, -20, 1, -20)
-	page.Position = UDim2.new(0, 10, 0, 10)
+	page.Size = UDim2.new(1, -16, 1, -16)
+	page.Position = UDim2.new(0, 8, 0, 8)
 	page.BackgroundTransparency = 1
-	page.ScrollBarThickness = 6
+	page.ScrollBarThickness = 5
 	page.Visible = false
 	page.ZIndex = 3
 	page.Parent = Content
-	Instance.new("UIListLayout", page).Padding = UDim.new(0, 8)
+	Instance.new("UIListLayout", page).Padding = UDim.new(0, 6)
 	Pages[name] = page
 	return page
 end
@@ -176,14 +176,14 @@ local SettingsPage = CreatePage("Settings")
 
 local function CreateTab(name, index)
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(1, 0, 0, 55)
-	btn.Position = UDim2.new(0, 0, 0, (index-1)*65)
+	btn.Size = UDim2.new(1, 0, 0, 48)
+	btn.Position = UDim2.new(0, 0, 0, (index-1)*58)
 	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	btn.BackgroundTransparency = 0.3
 	btn.Text = name
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 19
+	btn.TextSize = 17
 	btn.ZIndex = 3
 	btn.Parent = Sidebar
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
@@ -205,7 +205,7 @@ SettingsTab.MouseButton1Click:Connect(function() Switch(SettingsPage) end)
 
 local function createToggle(parent, text, key)
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, -20, 0, 38)
+	frame.Size = UDim2.new(1, -16, 0, 34)
 	frame.BackgroundTransparency = 1
 	frame.ZIndex = 3
 	frame.Parent = parent
@@ -216,19 +216,19 @@ local function createToggle(parent, text, key)
 	label.Text = " " .. text
 	label.TextColor3 = Color3.fromRGB(255, 255, 255)
 	label.Font = Enum.Font.SourceSansBold
-	label.TextSize = 17
+	label.TextSize = 15
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.ZIndex = 3
 	label.Parent = frame
 
 	local toggle = Instance.new("TextButton")
-	toggle.Size = UDim2.new(0, 65, 0, 26)
-	toggle.Position = UDim2.new(1, -75, 0.5, -13)
+	toggle.Size = UDim2.new(0, 55, 0, 22)
+	toggle.Position = UDim2.new(1, -65, 0.5, -11)
 	toggle.BackgroundColor3 = Config[key] and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(50, 50, 50)
 	toggle.Text = Config[key] and "ON" or "OFF"
 	toggle.TextColor3 = Color3.fromRGB(255,255,255)
 	toggle.Font = Enum.Font.SourceSansBold
-	toggle.TextSize = 14
+	toggle.TextSize = 13
 	toggle.ZIndex = 3
 	toggle.Parent = frame
 	Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 3)
@@ -242,25 +242,25 @@ end
 
 local function createSlider(parent, name, min, max, key, decimals)
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, -20, 0, 55)
+	frame.Size = UDim2.new(1, -16, 0, 48)
 	frame.BackgroundTransparency = 1
 	frame.ZIndex = 3
 	frame.Parent = parent
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 0, 20)
+	label.Size = UDim2.new(1, 0, 0, 18)
 	label.BackgroundTransparency = 1
 	label.Text = " " .. name .. ": " .. string.format(decimals and "%.2f" or "%d", Config[key])
 	label.TextColor3 = Color3.fromRGB(255, 255, 255)
 	label.Font = Enum.Font.SourceSansBold
-	label.TextSize = 16
+	label.TextSize = 14
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.ZIndex = 3
 	label.Parent = frame
 
 	local bg = Instance.new("Frame")
-	bg.Size = UDim2.new(1, 0, 0, 10)
-	bg.Position = UDim2.new(0, 0, 0, 32)
+	bg.Size = UDim2.new(1, 0, 0, 8)
+	bg.Position = UDim2.new(0, 0, 0, 26)
 	bg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 	bg.ZIndex = 3
 	bg.Parent = frame
@@ -274,8 +274,8 @@ local function createSlider(parent, name, min, max, key, decimals)
 	Instance.new("UICorner", fill).CornerRadius = UDim.new(0, 2)
 
 	local knob = Instance.new("Frame")
-	knob.Size = UDim2.new(0, 14, 0, 14)
-	knob.Position = UDim2.new((Config[key] - min) / (max - min), -7, 0.5, -7)
+	knob.Size = UDim2.new(0, 12, 0, 12)
+	knob.Position = UDim2.new((Config[key] - min) / (max - min), -6, 0.5, -6)
 	knob.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
 	knob.ZIndex = 3
 	knob.Parent = bg
@@ -291,7 +291,7 @@ local function createSlider(parent, name, min, max, key, decimals)
 			if not decimals then value = math.round(value) end
 			Config[key] = value
 			fill.Size = UDim2.new(percent, 0, 1, 0)
-			knob.Position = UDim2.new(percent, -7, 0.5, -7)
+			knob.Position = UDim2.new(percent, -6, 0.5, -6)
 			label.Text = " " .. name .. ": " .. string.format(decimals and "%.2f" or "%d", value)
 		end
 	end)
@@ -311,13 +311,13 @@ createToggle(PlayerPage, "Flight Enabled", "FlightEnabled")
 createToggle(SettingsPage, "FOV Circle", "FOVCircleEnabled")
 
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 40, 0, 40)
-CloseBtn.Position = UDim2.new(1, -55, 0, 15)
+CloseBtn.Size = UDim2.new(0, 34, 0, 34)
+CloseBtn.Position = UDim2.new(1, -46, 0, 13)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
 CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.new(1,1,1)
 CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.TextSize = 22
+CloseBtn.TextSize = 20
 CloseBtn.ZIndex = 5
 CloseBtn.Parent = TopBar
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 4)
