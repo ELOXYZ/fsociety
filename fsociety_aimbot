@@ -18,7 +18,7 @@ end
 local Config = {
     Enabled = false,
     Keybind = Enum.KeyCode.V,
-    FieldOfView = 350,
+    FieldOfView = 150,
     Smoothness = 0.05,
     TargetPart = "Head",
     TeamCheck = true,
@@ -29,7 +29,7 @@ local Config = {
     FlightEnabled = false,
     SpectateEnabled = false,
     FOVCircleEnabled = true,
-    ThemeColor = Color3.fromRGB(255, 255, 255)
+    ThemeColor = Color3.fromRGB(135, 0, 255)
 }
 
 local Players = game:GetService("Players")
@@ -665,4 +665,4 @@ end)
 
 table.insert(connections, aimbotConn)
 
-print("fsociety loaded - no drift flight")
+print("fuck da hoes")
