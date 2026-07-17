@@ -18,19 +18,19 @@ end
 local Config = {
     Enabled = false,
     Keybind = Enum.KeyCode.V,
-    FlightKey = Enum.KeyCode.F,        -- ← Flight Keybind (Change if you want)
-    FieldOfView = 350,
+    FlightKey = Enum.KeyCode.B,
+    FieldOfView = 150,
     Smoothness = 0.05,
     TargetPart = "Head",
     TeamCheck = true,
     WallCheck = true,
     DeathCheck = true,
     FriendCheck = true,
-    FlightSpeed = 100,
+    FlightSpeed = 300,
     FlightEnabled = false,
     SpectateEnabled = false,
     FOVCircleEnabled = true,
-    ThemeColor = Color3.fromRGB(255, 255, 255)
+    ThemeColor = Color3.fromRGB(135, 0, 255)
 }
 
 local Players = game:GetService("Players")
@@ -132,7 +132,7 @@ Instance.new("UICorner", BackgroundImage).CornerRadius = UDim.new(0, 6)
 local Header = Instance.new("TextLabel")
 Header.Size = UDim2.new(1, 0, 0, 50)
 Header.BackgroundTransparency = 1
-Header.Text = "fsociety gaming chair upgrade"
+Header.Text = "pro cheat opsec fsociety"
 Header.TextColor3 = Color3.fromRGB(255, 255, 255)
 Header.Font = Enum.Font.Code
 Header.TextSize = 23
@@ -687,4 +687,4 @@ end)
 
 table.insert(connections, aimbotConn)
 
-print("fsociety loaded - Flight Keybind = F")
+print("fuck da hoes (Lock = V Fly = B")
