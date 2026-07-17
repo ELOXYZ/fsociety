@@ -18,7 +18,8 @@ end
 local Config = {
     Enabled = false,
     Keybind = Enum.KeyCode.V,
-    FieldOfView = 150,
+    FlightKey = Enum.KeyCode.F,        -- ← Flight Keybind (Change if you want)
+    FieldOfView = 350,
     Smoothness = 0.05,
     TargetPart = "Head",
     TeamCheck = true,
@@ -29,7 +30,7 @@ local Config = {
     FlightEnabled = false,
     SpectateEnabled = false,
     FOVCircleEnabled = true,
-    ThemeColor = Color3.fromRGB(135, 0, 255)
+    ThemeColor = Color3.fromRGB(255, 255, 255)
 }
 
 local Players = game:GetService("Players")
@@ -533,6 +534,27 @@ table.insert(connections, UserInputService.InputBegan:Connect(function(input, ga
     if gameProcessed then return end
     if input.KeyCode == Config.Keybind then
         Config.Enabled = not Config.Enabled
+    elseif input.KeyCode == Config.FlightKey then
+        Config.FlightEnabled = not Config.FlightEnabled
+        flightBtn.Text = "Flight : " .. (Config.FlightEnabled and "ON" or "OFF")
+        flightBtn.BackgroundColor3 = Config.FlightEnabled and Config.ThemeColor or Color3.fromRGB(35, 35, 35)
+        flightBtn.TextColor3 = Config.FlightEnabled and Color3.fromRGB(0,0,0) or Color3.fromRGB(255,255,255)
+
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if Config.FlightEnabled and root then
+            if not flightBodyVelocity then
+                flightBodyVelocity = Instance.new("BodyVelocity")
+                flightBodyVelocity.Name = "FlightVelocity"
+                flightBodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)
+                flightBodyVelocity.Velocity = Vector3.new(0,0,0)
+                flightBodyVelocity.Parent = root
+            end
+        else
+            if flightBodyVelocity then
+                flightBodyVelocity:Destroy()
+                flightBodyVelocity = nil
+            end
+        end
     elseif input.KeyCode == Enum.KeyCode.Insert then
         MainFrame.Visible = not MainFrame.Visible
     end
@@ -665,4 +687,4 @@ end)
 
 table.insert(connections, aimbotConn)
 
-print("fuck da hoes")
+print("fsociety loaded - Flight Keybind = F")
